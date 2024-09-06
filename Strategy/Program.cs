@@ -1,44 +1,69 @@
 ﻿public interface IAttack
 {
-    void Attack(Pokemon pokemon);
+    int CalculateDamage(Pokemon attacker, Pokemon defender);
+    void ApplyEffects(Pokemon defender);
 }
 
 public class QuickAttack : IAttack
 {
-    public void Attack(Pokemon pokemon)
+    public int CalculateDamage(Pokemon attacker, Pokemon defender)
     {
-        Console.WriteLine($"{pokemon.Name} usó Ataque Rápido!");
-        // Lógica para calcular el daño, aplicar efectos, etc.
+        // Cálculo básico del daño basado en el nivel y el ataque del Pokémon
+        return attacker.Level * 5;
+    }
+
+    public void ApplyEffects(Pokemon defender)
+    {
+        Console.WriteLine($"{defender.Name} recibió un golpe rápido.");
     }
 }
 
 public class FireBlast : IAttack
 {
-    public void Attack(Pokemon pokemon)
+    public int CalculateDamage(Pokemon attacker, Pokemon defender)
     {
-        Console.WriteLine($"{pokemon.Name} usó Lanzallamas!");
-        // Lógica para calcular el daño, aplicar efectos de quemadura, etc.
+        // Cálculo del daño considerando tipo, efectividad y otros factores
+        int damage = attacker.Level * 10;
+        if (defender.Type == PokemonType.Grass)
+        {
+            damage *= 2; // Daño doble contra tipo hierba
+        }
+        return damage;
+    }
+
+    public void ApplyEffects(Pokemon defender)
+    {
+        Console.WriteLine($"{defender.Name} fue quemado!");
+        defender.Burned = true;
     }
 }
 
-public class WaterGun : IAttack
+// ... otros ataques ...
+
+public enum PokemonType
 {
-    public void Attack(Pokemon pokemon)
-    {
-        Console.WriteLine($"{pokemon.Name} usó Pistola de Agua!");
-        // Lógica para calcular el daño, aplicar efectos de estado, etc.
-    }
+    Water,
+    Fire,
+    Grass,
+    Electric,
+    // ... otros tipos
 }
 
 public class Pokemon
 {
     public string Name { get; set; }
     public int Level { get; set; }
+    public PokemonType Type { get; set; }
+    public bool Burned { get; set; }
     public IAttack Attack { get; set; }
+    public int HP { get; set; }    
 
-    public void UseAttack()
+    public void UseAttack(Pokemon opponent)
     {
-        Attack.Attack(this);
+        int damage = Attack.CalculateDamage(this, opponent);
+        opponent.HP -= damage;
+        Attack.ApplyEffects(opponent);
+        Console.WriteLine($"{Name} infligió {damage} puntos de daño a {opponent.Name}!");
     }
 }
 class Program
@@ -46,17 +71,10 @@ class Program
     static void Main(string[] args)
     {
 
-        // Ejemplo de uso
-        Pokemon pikachu = new Pokemon() { Name = "Pikachu", Level = 25, Attack = new QuickAttack() };
-        pikachu.UseAttack(); // Salida: Pikachu usó Ataque Rápido!
+        Pokemon charmander = new Pokemon { Name = "Charmander", Level = 10, Type = PokemonType.Fire, Attack = new FireBlast() };
+        Pokemon bulbasaur = new Pokemon { Name = "Bulbasaur", Level = 10, Type = PokemonType.Grass, HP = 50 };
 
-        // Cambiamos el ataque
-        pikachu.Attack = new FireBlast();
-        pikachu.UseAttack(); // Salida: Pikachu usó Lanzallamas!
-
-        //Ahora elijamos a Charmander
-        Pokemon charmander = new Pokemon() { Name = "Charmander", Level = 10, Attack = new FireBlast() };
-        charmander.UseAttack();
+        charmander.UseAttack(bulbasaur);
 
     }
 }
